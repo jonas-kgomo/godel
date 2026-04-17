@@ -1,0 +1,60 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Gödel Engine",
+  "logo": {
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png"
+  },
+  "favicon": "/favicon.png",
+  "colors": {
+    "primary": "#0055CC",
+    "light": "#3388FF",
+    "dark": "#003399"
+  },
+  "topbarLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/jonas-kgomo/godel"
+    }
+  ],
+  "content": {
+    "font": {
+      "headings": "Inter",
+      "body": "Inter",
+      "code": "JetBrains Mono"
+    }
+  },
+  "navigation": [
+    {
+      "group": "Introduction",
+      "pages": [
+        "docs/introduction",
+        "docs/benchmarks"
+      ]
+    },
+    {
+      "group": "Architecture",
+      "pages": [
+        "docs/beyond-gogpu",
+        "docs/typography",
+        "docs/rendering",
+        "docs/threading"
+      ]
+    },
+    {
+      "group": "Project Status",
+      "pages": [
+        "docs/limitations"
+      ]
+    },
+    {
+      "group": "Getting Started",
+      "pages": [
+        "docs/quickstart"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/jonas-kgomo/godel"
+  }
+}

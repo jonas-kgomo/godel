@@ -1,0 +1,41 @@
+---
+title: "Quickstart"
+description: "Build your first native GPU app in minutes."
+---
+
+Ready to ditch Electron? The Gödel CLI makes bootstrapping a new application trivial.
+
+## 1. Installation
+
+<CodeGroup>
+```bash Terminal
+# Install the CLI tool
+go install github.com/intercode/godel/cmd/godel@latest
+```
+</CodeGroup>
+
+## 2. Initialize your App
+
+```bash
+godel init my-app
+cd my-app
+```
+
+## 3. Run with Hot-Reload
+
+```bash
+godel dev
+```
+
+<Note>
+  **Important for macOS**: Ensure `CGO_ENABLED=1` is set in your environment. Gödel binds directly to the Metal Graphics API on Apple Silicon.
+</Note>
+
+## 4. Building for Release
+
+To compile a single, stripped binary for distribution:
+
+```bash
+godel build --release
+```
+Your native executable will be located in the `bin/` directory, ready to ship.

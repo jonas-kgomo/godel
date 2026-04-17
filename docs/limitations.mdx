@@ -1,0 +1,24 @@
+---
+title: "Current Status & Limitations"
+description: "A humble look at where we are and where we're going."
+---
+
+We are humble about where Gödel is today. While our core architecture is fast and deterministic, we are a young project with several hurdles to clear.
+
+## Where we are growing
+
+### 1. Ecosystem Maturity
+Unlike Electron or Flutter, our third-party widget library is still growing. Complex components like "Rich Text Editors" or "Advanced Data Grids" are currently in active development.
+
+### 2. Native Accessibility
+OS-level accessibility (Screen Readers, VoiceOver) for our custom-rendered widgets is currently in a "Beta" state. We are actively mapping native OS accessibility trees to our internal widget structure.
+
+### 3. 2D vs 3D focus
+Our pipeline is highly optimized for 2D UI and path-based vector graphics. While 3D is possible, we do not yet provide a full-featured 3D scene-graph.
+
+### 4. GPU Driver Edge Cases
+Handling Vulkan/Metal/DX12 abstractions directly in Go means we are still identifying edge-case driver bugs on older hardware.
+
+<Warning>
+  **Beta Project**: Gödel is currently in v0.1. Expect breaking API changes as we refine the reactor model and widget hierarchy.
+</Warning>

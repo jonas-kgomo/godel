@@ -1,0 +1,37 @@
+---
+title: "Beyond raw GPU"
+description: "What we built on top of the gogpu rendering context."
+---
+
+Developers often ask: *"If you're using gogpu, what did you actually build?"*
+
+`gogpu` provides a low-level bridge to Vulkan and Metal. It's essentially a blank canvas. To make it a professional **engine**, we built several core "++" layers that simply didn't exist before.
+
+## The Engine Layers
+
+### 1. The "Zero-Jank" Task Queue
+We built a specialized buffer that allows your background tasks (like downloading a 1GB file) to update the UI without the app "hiccupping." Standard GPU apps usually freeze for a split second; Gödel stays at a smooth 60fps.
+
+### 2. Intelligent Redrawing
+We added a system that knows exactly which pixels changed. If you only move a slider, we don't redraw the whole screen—we only update the slider. This is why our idle battery usage is effectively zero.
+
+### 3. Hot-Reloading Pipeline
+We engineered a custom watcher within the CLI (`godel dev`) that allows for <2s reload cycles. This brings "web-like" agility to native binary development, which was previously nearly impossible in Go GPU projects.
+
+### 4. Retained Mode Tree
+A managed widget tree that tracks state changes, so you don't have to redraw everything manually every frame.
+
+### 5. Flexbox Layout Engine
+A pure-Go implementation of standard layout constraints, allowing for truly responsive desktop designs.
+
+```go
+// Example of the engine bridging raw GPU context to a UI tree
+a.gogpuApp.OnDraw(func(dc *gogpu.Context) {
+    a.drainTaskQueue() // Sync background work
+    a.uiApp.Frame()    // Process reactive signals
+    
+    a.canvas.Draw(func(cc *gg.Context) {
+        a.uiApp.Window().DrawTo(render.NewCanvas(cc, w, h))
+    })
+})
+```

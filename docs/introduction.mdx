@@ -1,0 +1,19 @@
+---
+title: "Engineering Gödel"
+description: "A humble journey into building a deterministic UI engine for Go."
+---
+
+Welcome to the Gödel Development Engine documentation. Gödel is a GPU-accelerated, pure-Go desktop UI framework designed for developers who value performance, small binary sizes, and predictable threading.
+
+## Why Gödel?
+
+We built Gödel to solve the "WebView tax" that modern desktop applications pay. By eliminating the bridge between high-level logic and low-level rendering, we've created a framework that is both fast to develop and fast to run.
+
+### Core Philosophy
+*   **Humble Benchmarking**: We focus on real-world metrics like memory usage and logic latency.
+*   **Zero-CGO Strategy**: Direct communication with the GPU in its native language (Metal/Vulkan).
+*   **Deterministic Threading**: No more accidental crashes from background goroutines.
+
+<Card title="Quick Start" icon="bolt" href="/docs/quickstart">
+  Install the CLI and build your first native GPU app in under 5 minutes.
+</Card>

@@ -2,6 +2,9 @@ package ui
 
 import (
 	"context"
+	"fmt"
+	"os/exec"
+	"runtime"
 
 	state "github.com/coregx/signals"
 	"github.com/gogpu/ui/core/button"
@@ -157,6 +160,23 @@ func Slider(cfg SliderConfig) Widget {
 		slider.Value(cfg.Value),
 		slider.OnChange(action),
 	)
+}
+
+// --- Shell & Dialogs ---
+
+// ShowMessageDialog shows a native system alert box.
+// On macOS it uses osascript; others fallback to terminal logging.
+func ShowMessageDialog(ctx context.Context, title, message string, onClosed func()) {
+	if runtime.GOOS == "darwin" {
+		script := fmt.Sprintf("display alert %q message %q as informational buttons {\"OK\"} default button \"OK\"", title, message)
+		_ = exec.Command("osascript", "-e", script).Run()
+	} else {
+		fmt.Printf("DIALOG: [%s] %s\n", title, message)
+	}
+
+	if onClosed != nil {
+		onClosed()
+	}
 }
 
 

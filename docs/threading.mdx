@@ -1,0 +1,29 @@
+---
+title: "Safe Threading"
+description: "How we solve the 'Single-Threaded' OS restriction."
+---
+
+Desktop OS graphics APIs (like Cocoa or WinAPI) are strictly single-threaded. If you mutate a widget from a background goroutine, the app will crash or flicker.
+
+## The Solution: Task Queueing
+We solved this with a high-performance **Task Buffer**. Instead of complex locks, you send a closure back to the engine.
+
+### How it works
+Gödel drains this queue at the start of every frame, ensuring your data is applied safely on the main thread.
+
+```go
+// Fire off a background task
+go func() {
+    data := fetchData() 
+
+    // Queue the update back to the UI thread safely
+    app.QueueCallback(func() {
+        myLabel.SetText(data.Title)
+    })
+}()
+```
+
+### The Benefit
+*   **Zero Mutexes**: You don't need to worry about `sync.Mutex` for UI updates.
+*   **Safety**: Impossible to crash the OS graphics thread from a background goroutine.
+*   **Predictability**: Updates are synchronized with the frame timing (60fps).

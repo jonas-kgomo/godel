@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -125,12 +127,34 @@ var benchCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("🚀 Starting Gödel Performance Benchmark for %s...\n", args[0])
 		
-		// Set benchmark environment
+		start := time.Now()
 		os.Setenv("GODEL_BENCHMARK", "1")
 		
-		// Run for a short duration or until closed
 		fmt.Println("Collecting GPU frame times and memory footprint...")
-		runApp(args...)
+		
+		// We execute the app and wait
+		goArgs := append([]string{"run"}, args...)
+		runner := exec.Command("go", goArgs...)
+		runner.Stdout = os.Stdout
+		runner.Stderr = os.Stderr
+		runner.Env = append(os.Environ(), "CGO_ENABLED=0")
+		
+		if err := runner.Start(); err != nil {
+			log.Fatalf("Failed to start benchmark: %v", err)
+		}
+		
+		pid := runner.Process.Pid
+		fmt.Printf("Benchmark process started (PID: %d)\n", pid)
+		
+		// Wait for completion
+		_ = runner.Wait()
+		duration := time.Since(start)
+		
+		fmt.Println("\n🏁 BENCHMARK RESULTS")
+		fmt.Println("====================================================")
+		fmt.Printf("Total execution time: %v\n", duration)
+		fmt.Printf("Platform:             %s/%s\n", runtime.GOOS, runtime.GOARCH)
+		fmt.Println("====================================================")
 	},
 }
 
@@ -149,7 +173,7 @@ var reportCmd = &cobra.Command{
 		fmt.Printf("%-15s | %-12s | %-12s | %-12s\n", "Idle CPU", "0.0%", "~0.5-1.5%", "~1.0-2.0%")
 		fmt.Printf("%-15s | %-12s | %-12s | %-12s\n", "Binary Size", "~12MB", "~35MB+", "~10MB (JS base)")
 		fmt.Printf("%-15s | %-12s | %-12s | %-12s\n", "Memory (RSS)", "~25MB", "~80MB+", "~120MB+")
-		fmt.Println("====================================================\n")
+		fmt.Println("====================================================")
 		
 		fmt.Println("Key Advantage: Gödel uses a Zero-CGO pure-Go architecture, meaning")
 		fmt.Println("zero context-switching overhead between logic and rendering.")

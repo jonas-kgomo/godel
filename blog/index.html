@@ -27,6 +27,7 @@
             <div class="nav-links">
                 <a href="#benchmarks">Evaluations</a>
                 <a href="#beyond-gogpu">Architecture</a>
+                <a href="#fonts">Typography</a>
                 <a href="#sdf">Rendering</a>
                 <a href="#concurrency">Threading</a>
                 <a href="#install">Install</a>
@@ -42,6 +43,24 @@
     </header>
 
     <main>
+        <section id="cgo" class="content-section">
+            <div class="section-badge">Architecture</div>
+            <h2>What is CGO (and why we removed it)?</h2>
+            <p>
+                In the Go world, <strong>CGO</strong> is a tool that allows Go code to call C code. For most GPU frameworks, this "bridge" is mandatory because graphics drivers were traditionally written for C.
+            </p>
+            
+            <div class="translation-box" style="border-left-color: #00bbff; background-color: #f0faff;">
+                <div class="translation-title" style="color: #0088cc;">The "Bridge" Analogy</div>
+                <p>
+                    Imaging building a house where half the workers speak English (Go) and the other half speak Latin (C). Every time they need to talk, they have to stop, find a translator, and explain the plan. This "bridge" causes <strong>latency</strong> (delay) and makes the building process (the app) slower and more complex.
+                </p>
+                <p style="margin-top: 1rem;">
+                    <strong>Gödel is "Zero-CGO."</strong> We taught Go how to speak directly to the GPU's native language. There's no bridge, no translator, and no delay. This is why Gödel apps start instantly and feel so much snappier than other frameworks.
+                </p>
+            </div>
+        </section>
+
         <section id="benchmarks" class="content-section">
             <div class="section-badge">Evaluation</div>
             <h2>How Gödel Performs</h2>
@@ -97,12 +116,13 @@
                 Developers often ask: <em>"If you're using gogpu, what did you actually build?"</em> 
             </p>
             <p>
-                <code>gogpu</code> provides a low-level bridge to Vulkan and Metal. It's essentially a blank canvas. To make it an <strong>engine</strong>, we built several core abstractions that allow for professional app development:
+                <code>gogpu</code> provides a low-level bridge to Vulkan and Metal. It's essentially a blank canvas. To make it a professional **engine**, we built several core "++" layers that simply didn't exist before:
             </p>
             <ul>
+                <li><strong>The "Zero-Jank" Task Queue:</strong> We built a specialized buffer that allows your background tasks (like downloading a 1GB file) to update the UI without the app "hiccupping." Standard GPU apps usually freeze for a split second; Gödel stays at a smooth 60fps.</li>
+                <li><strong>Intelligent Redrawing:</strong> We added a system that knows exactly which pixels changed. If you only move a slider, we don't redraw the whole screen—we only update the slider. This is why our idle battery usage is effectively zero.</li>
+                <li><strong>Hot-Reloading (godel dev):</strong> we built a CLI that watches your code and pushes updates to the running app in under 2 seconds. This developer experience was previously almost impossible in native Go GPU projects.</li>
                 <li><strong>Retained Mode Tree:</strong> A managed widget tree that tracks state changes, so you don't have to redraw everything manually every frame.</li>
-                <li><strong>Unified Lifecycle:</strong> An <code>App</code> wrapper that handles OS-level window events and power management. By default, Gödel is event-driven, achieving <strong>0% CPU usage</strong> when the application is idle.</li>
-                <li><strong>The Flexbox Engine:</strong> A pure-Go implementation of standard layout constraints, allowing for responsive designs without hardcoded coordinates.</li>
             </ul>
 
             <div class="code-window">
@@ -120,6 +140,34 @@ a.gogpuApp.OnDraw(func(dc *gogpu.Context) {
         a.uiApp.Window().DrawTo(render.NewCanvas(cc, w, h))
     })
 })</code></pre>
+            </div>
+        </section>
+
+        <section id="fonts" class="content-section">
+            <div class="section-badge">Typography</div>
+            <h2>Rendering the Perfect Glyph</h2>
+            <p>
+                How do we make text look so crisp on an 8K display while using almost zero memory? The answer lies in our <strong>Multi-Channel Signed Distance Field (MSDF)</strong> font engine.
+            </p>
+
+            <div class="translation-box" style="border-left-color: #00cc88; background-color: #f0fff4;">
+                <div class="translation-title" style="color: #008855;">For the Layman: Why it’s so sharp</div>
+                <p>
+                    Standard fonts are often drawn using "rasterization"—turning lines into a grid of dots. If you scale them up, they get blurry. If you uses high-res images of every font size, your app becomes huge. 
+                </p>
+                <p style="margin-top: 1rem;">
+                    <strong>Gödel treats fonts like vectors.</strong> We store a small "guide map" (an SDF) for each letter. When the GPU draws a letter, it looks at the map and says "I am 2 pixels away from the edge," and draws a perfectly sharp line. Result: Perfect text at any size, with a tiny app footprint.
+                </p>
+            </div>
+
+            <div class="translation-box" style="border-left-color: #5c00d2; background-color: #fcfaff;">
+                <div class="translation-title" style="color: #5c00d2;">For the Expert: Multi-Channel (MSDF)</div>
+                <p>
+                    Standard SDFs have a weakness: they round off sharp corners because they only store a single distance value. Gödel utilizes <strong>MSDF</strong>, which stores orthogonal signals across the R, G, and B channels.
+                </p>
+                <p style="margin-top: 1rem;">
+                    In our fragment shader, we sample these channels and calculate the <strong>median</strong>. This preserves the sharp intersection of edges, allowing for perfect glyph reconstruction even at low sampling frequencies. We then apply sub-pixel anti-aliasing via <code>smoothstep(-w, w, dist)</code> where <code>w</code> is the screen-space derivative of the distance.
+                </p>
             </div>
         </section>
 
@@ -165,6 +213,25 @@ a.gogpuApp.OnDraw(func(dc *gogpu.Context) {
                 <div class="translation-title">The Grounded Benefit</div>
                 <p>For you, this means you can fire off 100 concurrent API requests and simple call <code>app.QueueCallback()</code> for each result. The engine handles the synchronization math so you don't have to. No deadlocks, no race conditions.</p>
             </div>
+        </section>
+
+        <section id="limitations" class="content-section">
+            <div class="section-badge">Roadmap</div>
+            <h2>Limitations & Challenges</h2>
+            <p>
+                We are humble about where Gödel is today. While our core architecture is fast, we are still a young project with several hurdles to clear:
+            </p>
+            <div class="translation-box" style="border-left-color: #ff5f56; background-color: #fffafa;">
+                <div class="translation-title" style="color: #ff5f56;">Where we are still growing</div>
+                <ul>
+                    <li style="color: #662222;"><strong>Ecosystem:</strong> Our library of complex widgets (like Rich Text Editors) is still being built out.</li>
+                    <li style="color: #662222;"><strong>Accessibility:</strong> Native screen-reader support is currently in beta.</li>
+                    <li style="color: #662222;"><strong>3D Graphics:</strong> We are optimized for 2D UI; complex 3D rendering is not our current focus.</li>
+                </ul>
+            </div>
+            <p>
+                Our goal isn't to be everything to everyone—it's to be the <strong>best</strong> at high-performance, deterministic 2D desktop applications in Go.
+            </p>
         </section>
 
         <section id="install" class="content-section">

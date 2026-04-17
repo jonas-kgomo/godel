@@ -1,0 +1,23 @@
+---
+title: "Vector Rendering (SDF)"
+description: "Infinite resolution for shapes and icons."
+---
+
+One of Gödel's biggest departures from standard rendering frameworks is how we handle shapes and text using **Signed Distance Fields (SDF)**.
+
+## Infinite Zoom
+Most apps use "bitmaps" (images made of tiny dots) for icons. If you zoom in too much, they get blurry or "pixelated."
+
+**Gödel is different.** Instead of dots, we store mathematical descriptions of the shapes. This means our icons and text are "infinitely sharp"—no matter if you're on a 1080p monitor or an 8K display, the edges stay perfectly crisp.
+
+### Why SDF?
+1.  **Tiny Footprint**: Math take up much less space than high-res images.
+2.  **GPU Native**: Shaders are extremely fast at calculating distance functions.
+3.  **Perfect Consistency**: Renders identically across all operating systems.
+
+### Mathematical Accuracy
+We leverage screen-space width metrics to ensure that as you scale, the anti-aliasing remains consistent.
+
+<Card title="Whitepaper" icon="file-pdf" href="/whitepaper">
+  Read the full mathematical derivation of our SDF algorithms in the technical whitepaper.
+</Card>

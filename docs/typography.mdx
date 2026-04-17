@@ -1,0 +1,27 @@
+---
+title: "Typography & FONTs"
+description: "How MSDF ensures perfect text on any screen."
+---
+
+How do we make text look so crisp on an 8K display while using almost zero memory? The answer lies in our **Multi-Channel Signed Distance Field (MSDF)** font engine.
+
+## The Problem with Raster Fonts
+Standard fonts are often drawn using "rasterization"—turning lines into a grid of dots. If you scale them up, they get blurry. If you bundle high-res images of every font size, your binary becomes huge.
+
+## Our Solution: MSDF
+**Gödel treats fonts like vectors.** We store a small "guide map" (an SDF) for each letter. When the GPU draws a letter, it looks at the map and says "I am 2 pixels away from the edge," and draws a perfectly sharp line.
+
+### Multi-Channel (Technical Detail)
+Standard SDFs round off sharp corners because they only store a single distance value. Gödel utilizes **MSDF**, which stores orthogonal signals across the R, G, and B channels.
+
+<Info>
+  **Expert Insight:** In our fragment shader, we sample these channels and calculate the **median**. This preserves the sharp intersection of edges, allowing for perfect glyph reconstruction even at low sampling frequencies.
+</Info>
+
+### Anti-Aliasing
+We apply sub-pixel anti-aliasing via screen-space derivatives:
+```glsl
+float d = median(texture(sdf_atlas, uv).rgb);
+float alpha = smoothstep(-fwidth(d), fwidth(d), d);
+```
+Result: Perfect text at any size, with a tiny app footprint.
