@@ -6,7 +6,6 @@ import (
 	state "github.com/coregx/signals"
 	"github.com/gogpu/ui/core/button"
 	"github.com/gogpu/ui/core/checkbox"
-	"github.com/gogpu/ui/core/dialog"
 	"github.com/gogpu/ui/core/slider"
 	"github.com/gogpu/ui/core/textfield"
 	"github.com/gogpu/ui/primitives"
@@ -29,11 +28,11 @@ func Hex(h string) Color            { /* TODO implement hex parser */ return RGB
 // --- Signals / State Management mappings ---
 
 func NewSignal[T any](initial T) state.Signal[T] {
-	return state.NewSignal(initial)
+	return state.New[T](initial)
 }
 
-func NewComputed[T any](fn func() T) state.Computed[T] {
-	return state.NewComputed(fn)
+func NewComputed[T any](fn func() T) state.ReadonlySignal[T] {
+	return state.Computed[T](fn)
 }
 
 // --- Layout Primitives ---
@@ -57,7 +56,7 @@ func Container(children ...Widget) *primitives.BoxWidget {
 func Spacer(w, h float32) *primitives.BoxWidget {
 	// Not an exact equivalent to a generic flex spacer yet,
 	// but serves as fixed-size spacing for now.
-	return primitives.Box().Size(w, h)
+	return primitives.Box().Width(w).Height(h)
 }
 
 // --- Basic Widgets ---
@@ -91,7 +90,7 @@ func Button(cfg ButtonConfig) Widget {
 	}
 
 	btn := button.New(
-		button.Label(cfg.Label),
+		button.Text(cfg.Label),
 		button.OnClick(action),
 	)
 
@@ -114,7 +113,7 @@ func CheckBox(cfg CheckBoxConfig) Widget {
 
 	return checkbox.New(
 		checkbox.Checked(cfg.Checked),
-		checkbox.OnChange(action),
+		checkbox.OnToggle(action),
 	)
 }
 
@@ -160,14 +159,4 @@ func Slider(cfg SliderConfig) Widget {
 	)
 }
 
-// --- Modal / Dialog ---
 
-// ShowMessageDialog maps your simple dialog API to gogpu/ui core/dialog
-func ShowMessageDialog(ctx context.Context, title, message string, onOK func()) {
-	d := dialog.Alert(title, message, func() {
-		if onOK != nil {
-			onOK()
-		}
-	})
-	d.Show(ctx)
-}

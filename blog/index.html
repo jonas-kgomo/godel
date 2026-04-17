@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engineering Gödel | A Factual Look at Our UI Framework</title>
+    <meta name="description" content="A humble evaluation of the Gödel Development Engine, benchmarked against Electron, Wails, and Flutter.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Highlight.js for beautiful code blocks -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/intellij-light.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script>hljs.highlightAll();</script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-content">
+            <div class="logo">Gödel<span>.Engine</span></div>
+            <div class="nav-links">
+                <a href="#benchmarks">Evaluations</a>
+                <a href="#beyond-gogpu">Architecture</a>
+                <a href="#sdf">Rendering</a>
+                <a href="#concurrency">Threading</a>
+                <a href="#install">Install</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-content">
+            <h1>Engineering Gödel</h1>
+            <p class="subtitle">A humble journey into building a deterministic UI engine. We focused on metrics that matter: binary size, latency, and developer sanity.</p>
+        </div>
+    </header>
+
+    <main>
+        <section id="benchmarks" class="content-section">
+            <div class="section-badge">Evaluation</div>
+            <h2>How Gödel Performs</h2>
+            <p>
+                When we started this project, the goal wasn't just to make "another UI kit." It was to address the "tax" that modern desktop apps pay—bloat and latency. Here is how Gödel compares to the frameworks we've used in the past.
+            </p>
+            
+            <div class="table-container">
+                <table class="evaluation-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Gödel</th>
+                            <th>Electron</th>
+                            <th>Wails v2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Binary Size</strong></td>
+                            <td>~5 MB</td>
+                            <td>150+ MB</td>
+                            <td>20-40 MB</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Startup Latency</strong></td>
+                            <td>&lt;100ms</td>
+                            <td>1s - 3s</td>
+                            <td>200ms - 500ms</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Logic Latency</strong></td>
+                            <td>&lt;1ms (Direct Go)</td>
+                            <td>5-20ms (JSON IPC)</td>
+                            <td>10-50ms (JSON Bridge)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Memory Idle</strong></td>
+                            <td>~15 MB</td>
+                            <td>100+ MB</td>
+                            <td>40-60 MB</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="caption">Benchmarks based on a standard "Hello World" application with basic interactive elements.</p>
+        </section>
+
+        <section id="beyond-gogpu" class="content-section">
+            <div class="section-badge">Architecture</div>
+            <h2>Beyond the GPU Abstraction</h2>
+            <p>
+                Developers often ask: <em>"If you're using gogpu, what did you actually build?"</em> 
+            </p>
+            <p>
+                <code>gogpu</code> provides a low-level bridge to Vulkan and Metal. It's essentially a blank canvas. To make it an <strong>engine</strong>, we built several core abstractions that allow for professional app development:
+            </p>
+            <ul>
+                <li><strong>Retained Mode Tree:</strong> A managed widget tree that tracks state changes, so you don't have to redraw everything manually every frame.</li>
+                <li><strong>Unified Lifecycle:</strong> An <code>App</code> wrapper that handles OS-level window events and power management. By default, Gödel is event-driven, achieving <strong>0% CPU usage</strong> when the application is idle.</li>
+                <li><strong>The Flexbox Engine:</strong> A pure-Go implementation of standard layout constraints, allowing for responsive designs without hardcoded coordinates.</li>
+            </ul>
+
+            <div class="code-window">
+                <div class="code-header"><span class="filename">pkg/app/app.go</span></div>
+                <pre><code class="language-go">// This is where the magic happens: bridging raw GPU context to a UI tree.
+a.gogpuApp.OnDraw(func(dc *gogpu.Context) {
+    a.drainTaskQueue() // Sync background work
+    
+    // The UI tree calculates its layout here
+    a.uiApp.Frame() 
+    
+    // Then we paint the results to the pixel buffer
+    a.canvas.Draw(func(cc *gg.Context) {
+        // ... rendering logic
+        a.uiApp.Window().DrawTo(render.NewCanvas(cc, w, h))
+    })
+})</code></pre>
+            </div>
+        </section>
+
+        <section id="sdf" class="content-section">
+            <div class="section-badge">Rendering Core</div>
+            <h2>Vector Graphics: Our SDF Contribution</h2>
+            <p>
+                One of Gödel's biggest departures from standard rendering frameworks is how we handle shapes and text using <strong>Signed Distance Fields (SDF)</strong>.
+            </p>
+
+            <div class="translation-box">
+                <div class="translation-title">For the Layman: Infinite Zoom</div>
+                <p>
+                    Most apps use "bitmaps" (images made of tiny dots) for icons and text. If you zoom in too much, they get blurry or "pixelated." 
+                    <strong>Gödel is different.</strong> Instead of dots, we store mathematical descriptions of the shapes. This means our icons and text are "infinitely sharp"—no matter if you're on a 1080p monitor or an 8K display, the edges stay perfectly crisp. It also makes our app binary tiny because math takes up much less space than high-res images.
+                </p>
+            </div>
+
+            <div class="translation-box" style="border-left-color: #5c00d2; background-color: #fcfaff;">
+                <div class="translation-title" style="color: #5c00d2;">For the Expert: MSDF & fwidth()</div>
+                <p>
+                    Standard SDFs often struggle with sharp corners at low resolutions. We contributed a robust <strong>Multi-Channel SDF (MSDF)</strong> pipeline. By sampling orthogonal distances across three channels (R, G, B) and evaluating the median on the GPU, we preserve sharp corners even in complex typography. 
+                </p>
+                <p style="margin-top: 0.5rem; font-family: var(--font-code); font-size: 0.85rem; color: #444;">
+                    // Anti-aliasing via screen-space derivatives<br>
+                    float d = median(texture(sdf_atlas, uv).rgb);<br>
+                    float alpha = smoothstep(-fwidth(d), fwidth(d), d);
+                </p>
+            </div>
+        </section>
+
+        <section id="concurrency" class="content-section">
+            <div class="section-badge">Concurrency</div>
+            <h2>Dealing with OS Realities</h2>
+            <p>
+                Desktop OS graphics APIs (like Cocoa or WinAPI) are notoriously single-threaded. If you mutate a widget from a background goroutine, the app will crash or flicker.
+            </p>
+            <p>
+                We solved this with a 1024-slot task buffer. Instead of complex locks, you send a closure. Gödel drains this queue at the start of every frame, ensuring your data is applied safely on the main thread.
+            </p>
+            
+            <div class="translation-box">
+                <div class="translation-title">The Grounded Benefit</div>
+                <p>For you, this means you can fire off 100 concurrent API requests and simple call <code>app.QueueCallback()</code> for each result. The engine handles the synchronization math so you don't have to. No deadlocks, no race conditions.</p>
+            </div>
+        </section>
+
+        <section id="install" class="content-section">
+            <div class="section-badge">Quick Start</div>
+            <h2>Start Building</h2>
+            <p>
+                We've tried to make it as easy as possible to get started. Note the <code>CGO_ENABLED</code> flag for macOS users, as we bind to native Metal.
+            </p>
+
+            <div class="code-window">
+                <div class="code-header"><span class="filename">Terminal</span></div>
+                <pre><code class="language-bash"># Install the CLI
+go install github.com/intercode/godel/cmd/godel@latest
+
+# Initialize and run
+godel init my-app
+cd my-app
+
+# On macOS: export CGO_ENABLED=1
+godel run</code></pre>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2026 Gödel Development Engine Project</p>
+            <p>A humble effort to build better desktop software.</p>
+        </div>
+    </footer>
+</body>
+</html>

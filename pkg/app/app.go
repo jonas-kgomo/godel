@@ -7,7 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/gogpu/gg"
 	_ "github.com/gogpu/gg/gpu"
@@ -15,6 +17,7 @@ import (
 	"github.com/gogpu/gogpu"
 	uiapp "github.com/gogpu/ui/app"
 	"github.com/gogpu/ui/render"
+	"github.com/gogpu/ui/theme"
 	"github.com/gogpu/ui/widget"
 
 	"github.com/intercode/godel/pkg/config"
@@ -177,6 +180,7 @@ func (a *App) Run(ctx ...context.Context) error {
 		uiapp.WithWindowProvider(a.gogpuApp),
 		uiapp.WithPlatformProvider(a.gogpuApp),
 		uiapp.WithEventSource(a.gogpuApp.EventSource()),
+		uiapp.WithTheme(theme.DefaultLight()),
 	)
 
 	// Fire OnReady hooks
@@ -191,8 +195,12 @@ func (a *App) Run(ctx ...context.Context) error {
 		a.uiApp.SetRoot(a.root)
 	}
 
+	// Internal metrics
+	var frameTimes []time.Duration
+
 	// Register draw handler
 	a.gogpuApp.OnDraw(func(dc *gogpu.Context) {
+		start := time.Now()
 		a.drainTaskQueue()
 		w, h := dc.Width(), dc.Height()
 
@@ -203,6 +211,8 @@ func (a *App) Run(ctx ...context.Context) error {
 				log.Printf("godel: canvas creation failed: %v", err)
 				return
 			}
+		} else if a.canvas.Width() != w || a.canvas.Height() != h {
+			a.canvas.Resize(w, h)
 		}
 
 		// Process UI frame (layout, state, events)
@@ -224,6 +234,15 @@ func (a *App) Run(ctx ...context.Context) error {
 		})
 
 		_ = a.canvas.RenderDirect(sv, sw, sh)
+
+		// Collect metrics if we're in a special mode (env var check for simplicity)
+		if os.Getenv("GODEL_BENCHMARK") == "1" {
+			frameTimes = append(frameTimes, time.Since(start))
+			// Only keep last 100 for windowing or similar
+			if len(frameTimes) > 1000 {
+				frameTimes = frameTimes[1:]
+			}
+		}
 	})
 
 	// Register close handler

@@ -11,30 +11,36 @@ Gödel is a GPU-accelerated desktop UI framework for Go, designed for building l
    ```
 
 2. **Install the `godel` CLI tool:**
-   To use the `godel` command globally, install it to your Go bin path:
+   The `godel` CLI abstracts away Go internals (it automatically handles `CGO_ENABLED=0` for you!). Install it by running:
    ```bash
    go install ./cmd/godel
    ```
-   *(Ensure `$(go env GOPATH)/bin` is in your system `$PATH`)*
+   **Important:** Ensure your Go path is available in your terminal. Add this to your `~/.zshrc` or `~/.bashrc` if you see a "command not found" error:
+   ```bash
+   export PATH=$PATH:$(go env GOPATH)/bin
+   ```
 
-## Running the Examples
+## Running Applications
 
-You can run the built-in examples directly without the `godel` CLI:
+You can run the built-in examples or any `main.go` file directly using `godel run`. You never need to worry about CGO flags again!
 
 ```bash
 # Run the Hello World example
-go run examples/hello-world/main.go
+godel run examples/hello-world/main.go
+
+# Run the complex Dashboard example
+godel run examples/dashboard/main.go
 ```
 
 ## Using the Gödel CLI
 
-Once installed, the CLI provides the developer platform layer:
+The Gödel developer platform layer simplifies the build process:
 
 ```bash
 # Initialize a new project
 godel init my-app
 
-# Run the project in development mode (with hot reloading)
+# Run the project in development mode (hot reloading)
 godel dev
 
 # Build the project for release
@@ -45,12 +51,8 @@ godel build --release
 
 *(Note: Test and benchmark suites are currently being built out.)*
 
-To run unit tests across the framework:
+For internal engine tests only (requires manual flags):
 ```bash
-go test ./...
-```
-
-To run benchmarks (measuring rendering latency and memory):
-```bash
-go test -bench=. -benchmem ./...
+CGO_ENABLED=0 go test ./...
+CGO_ENABLED=0 go test -bench=. -benchmem ./...
 ```
