@@ -1,8 +1,12 @@
+---
+title:  "Gödel Design"
+description: "Technical Architecture Deep-Dive"
+---
+
 # **Gödel: Revolutionary Cross-Platform Desktop UI Toolkit**
 
 *A Go-native, GPU-accelerated framework that beats Flutter, Wails, Tauri, and Electron at determinism, latency, and distribution.*
-
----
+ 
 
 ## Table of Contents
 1. [Philosophy & Positioning](#philosophy--positioning)
@@ -15,7 +19,7 @@
 8. [Quick Start Examples](#quick-start-examples)
 9. [Implementation Roadmap](#implementation-roadmap)
 
----
+ 
 
 ## Philosophy & Positioning
 
@@ -24,15 +28,15 @@ Gödel rejects the "webview-as-renderer" model that has plagued Wails, Tauri, an
 - **Go controls the pixels.** No OS-specific WebView2/WebKitGTK/WebKit variance. No "works on Windows, broken on Linux" drama.
 - **Single portable GPU canvas** bundled with your binary. Renders identically on Windows, macOS, Linux (Android/iOS support ready).
 - **Pure-Go native widgets** or **embedded lightweight GPU-driven HTML engine**, not OS webviews. Your choice. Your consistency.
-- **One tiny static binary** (<5-10 MB native path, <20-25 MB with web support). Zero external runtime dependencies.
+- **One tiny static binary** (`&lt;5-10 MB` native path, `&lt;20-25 MB` with web support). Zero external runtime dependencies.
 
 ### Why Gödel Wins
 
 | Framework   | Binary Size | Platform Parity | Latency | Concurrency | Complexity |
 |-------------|-------------|-----------------|---------|-------------|-----------|
-| **Gödel**   | ~5 MB       | ✅ Identical    | <1ms    | ✅ Async-first | Low |
+| **Gödel**   | ~5 MB       | ✅ Identical    | `&lt;1ms`    | ✅ Async-first | Low |
 | Electron    | 150+ MB     | ✅ Good         | 5-20ms  | 🟠 Event loop | High |
-| Flutter     | 40-80 MB    | ✅ Excellent    | <1ms    | ✅ Strong   | Medium |
+| Flutter     | 40-80 MB    | ✅ Excellent    | `&lt;1ms`    | ✅ Strong   | Medium |
 | Wails v2+   | 20-40 MB    | ❌ WebView bugs | 10-50ms | 🟠 Go ↔ JS | High |
 | Tauri       | 10-15 MB    | 🟠 Partial      | 10-40ms | 🟠 JS+Rust  | Very High |
 
@@ -40,7 +44,7 @@ Gödel rejects the "webview-as-renderer" model that has plagued Wails, Tauri, an
 
 ## Core Pillars
 
-### 1. **Deterministic, Ultra-Low Latency (<1ms)**
+### 1. **Deterministic, Ultra-Low Latency (`&lt;1ms`)**
 
 **Why It Matters:**
 - Wails/Tauri suffer from bridge serialization (JSON), webview jank, and event-loop thrashing.
@@ -56,10 +60,10 @@ Gödel rejects the "webview-as-renderer" model that has plagued Wails, Tauri, an
 **Telemetry:**
 ```
 Frame time breakdown:
-├─ Logic execution    <0.5ms (Go business logic)
-├─ Widget layout      <1.0ms (measured, not guessed)
-├─ GPU submission     <0.5ms (batched draw calls)
-└─ GPU render         <14ms (hardware-dependent)
+├─ Logic execution    &lt;0.5ms (Go business logic)
+├─ Widget layout      &lt;1.0ms (measured, not guessed)
+├─ GPU submission     &lt;0.5ms (batched draw calls)
+└─ GPU render         &lt;14ms (hardware-dependent)
 Total: ~16ms @ 60fps (can push 120fps on capable hardware)
 ```
 
@@ -157,8 +161,8 @@ func (p *AnalyticsPlugin) Init(ctx context.Context, app *godel.App) error {
 ### 5. **Minimal Distribution Size**
 
 **Target:**
-- **Native-only:** <5 MB
-- **With web support (Ultralight):** <20 MB
+- **Native-only:** &lt;5 MB
+- **With web support (Ultralight):** &lt;20 MB
 - **Comparison:** Electron (~150 MB), Flutter (~40-80 MB), Wails (~20-40 MB)
 
 **Techniques:**
@@ -317,9 +321,9 @@ Total: 5-15ms+ latency
 User clicks button
   → OS event (Windows/macOS/Linux)
   → Gödel event handler (direct Go function)
-  → State update (atomic, <0.5ms)
+  → State update (atomic, &lt;0.5ms)
   → Next frame render (within 16ms budget)
-Total: <1-2ms latency
+Total: &lt;1-2ms latency
 ```
 
 **Implementation:**
@@ -632,7 +636,7 @@ require github.com/yourusername/godel v0.1.0
 #### Development Mode (Hot Reload)
 ```bash
 godel dev
-# Watches for file changes, rebuilds and restarts app in <2 seconds
+# Watches for file changes, rebuilds and restarts app in &lt;2 seconds
 ```
 
 #### Build for Distribution
@@ -1098,7 +1102,7 @@ func fetchDataFromAPI(ctx context.Context) []Row {
 
 | Aspect | Wails | Gödel |
 |--------|-------|-------|
-| **Latency** | 10-50ms (bridge+webview) | <1-2ms (direct IPC) |
+| **Latency** | 10-50ms (bridge+webview) | &lt;1-2ms (direct IPC) |
 | **Platform Parity** | ❌ WebView inconsistency | ✅ Single renderer |
 | **Binary Size** | 20-40 MB | 5-20 MB |
 | **Dev Experience** | 🟠 Restart required | ✅ Hot reload (2s cycle) |
@@ -1111,7 +1115,7 @@ func fetchDataFromAPI(ctx context.Context) []Row {
 |--------|-------|-------|
 | **Setup Complexity** | Very high (Rust + JS toolchain) | Medium (Go only) |
 | **Binary Size** | 10-15 MB | 5-20 MB |
-| **Latency** | 10-40ms | <1-2ms |
+| **Latency** | 10-40ms | &lt;1-2ms |
 | **Concurrency** | Difficult (async Rust) | Easy (goroutines) |
 | **Web Path** | First-class | Optional |
 
@@ -1120,7 +1124,7 @@ func fetchDataFromAPI(ctx context.Context) []Row {
 | Aspect | Flutter | Gödel |
 |--------|---------|-------|
 | **Learning Curve** | Dart (new language) | Go (familiar) |
-| **Performance** | <1ms | <1ms |
+| **Performance** | &lt;1ms | &lt;1ms |
 | **Binary Size** | 40-80 MB | 5-20 MB |
 | **Mobile Support** | ✅ Excellent | 🔄 In progress |
 | **Community Size** | ✅ Large | 🆕 Growing |

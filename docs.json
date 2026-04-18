@@ -1,6 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Gödel Engine",
+  "theme": "mint",
   "logo": {
     "light": "/logo/light.png",
     "dark": "/logo/dark.png"
@@ -11,49 +12,53 @@
     "light": "#3388FF",
     "dark": "#003399"
   },
-  "topbarLinks": [
-    {
-      "name": "GitHub",
-      "url": "https://github.com/jonas-kgomo/godel"
-    }
-  ],
-  "content": {
-    "font": {
-      "headings": "Inter",
-      "body": "Inter",
-      "code": "JetBrains Mono"
-    }
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/jonas-kgomo/godel"
+      }
+    ]
   },
-  "navigation": [
-    {
-      "group": "Introduction",
-      "pages": [
-        "docs/introduction",
-        "docs/benchmarks"
-      ]
-    },
-    {
-      "group": "Architecture",
-      "pages": [
-        "docs/beyond-gogpu",
-        "docs/typography",
-        "docs/rendering",
-        "docs/threading"
-      ]
-    },
-    {
-      "group": "Project Status",
-      "pages": [
-        "docs/limitations"
-      ]
-    },
-    {
-      "group": "Getting Started",
-      "pages": [
-        "docs/quickstart"
-      ]
-    }
-  ],
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Introduction",
+            "pages": [
+              "docs/introduction",
+              "docs/benchmarks"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "docs/beyond-gogpu",
+              "docs/typography",
+              "docs/rendering",
+              "docs/threading",
+              "architecture/GODEL_ARCHITECTURE",
+              "architecture/GODEL_DESIGN"
+            ]
+          },
+          {
+            "group": "Project Status",
+            "pages": [
+              "docs/limitations"
+            ]
+          },
+          {
+            "group": "Getting Started",
+            "pages": [
+              "docs/quickstart"
+            ]
+          }
+        ]
+      }
+    ]
+  },
   "footerSocials": {
     "github": "https://github.com/jonas-kgomo/godel"
   }

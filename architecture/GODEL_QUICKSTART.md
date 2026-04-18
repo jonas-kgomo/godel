@@ -1,3 +1,9 @@
+---
+title:  "Gödel Quickstart"
+description: "Implementation Quick-Start & Project Templates"
+---
+
+
 # Gödel: Implementation Quick-Start & Project Templates
 
 ---
@@ -941,9 +947,9 @@ Expected performance targets:
 
 ```
 Frame Time (60fps = 16.7ms budget):
-├─ Logic execution     <1ms (user code)
-├─ Widget layout       <2ms (50+ widgets)
-├─ GPU rendering       <13ms (100+ elements)
+├─ Logic execution     &lt;1ms (user code)
+├─ Widget layout       &lt;2ms (50+ widgets)
+├─ GPU rendering       &lt;13ms (100+ elements)
 └─ Total              ~16ms
 
 Memory (native path):

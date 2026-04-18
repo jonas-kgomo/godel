@@ -1,3 +1,8 @@
+---
+title:  "Gödel Whitepaper"
+description: "Technical Architecture Deep-Dive"
+---
+
 # Gödel: Performance & Architectural Evaluation
 
 Gödel is designed for extreme efficiency by leveraging a **Zero-CGO, Pure-Go GPU Pipeline**. Our mission is to provide a "batteries-included" developer experience that combines the performance of native C++ engines with the safety and simplicity of Go.
@@ -21,7 +26,7 @@ While many frameworks stop at providing a window and a draw loop, we are focused
 2.  **Semantic Rendering (SDF)**: Instead of just pushing pixels, we leverage **Signed Distance Fields**. This allows for "infinite resolution" UI elements that stay perfectly sharp on 8K displays while keeping binary sizes under 15MB.
 3.  **Reactive State Engineering**: By integrating `signals`, the engine intelligently knows exactly which sub-tree of the UI needs a redraw, achieving **0.0% CPU usage** when the state is static.
 4.  **Intelligent Invalidation**: We built a sub-pixel tiling system that only requests redraws for the exact rectangles that changed, dramatically reducing GPU power consumption compared to "brute force" renderers.
-5.  **Developer Experience (Godel CLI)**: We built a custom watcher that enables high-velocity development with <2s hot-reload cycles, bringing "web-like" agility to native desktop development.
+5.  **Developer Experience (Godel CLI)**: We built a custom watcher that enables high-velocity development with ` &lt;2s ` hot-reload cycles, bringing "web-like" agility to native desktop development.
 
 ## 📊 Performance Comparison (macOS)
 

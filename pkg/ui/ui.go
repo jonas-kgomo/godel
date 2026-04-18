@@ -40,14 +40,18 @@ func NewComputed[T any](fn func() T) state.ReadonlySignal[T] {
 
 // --- Layout Primitives ---
 
+type UIBox struct {
+	*primitives.BoxWidget
+}
+
 // VStack creates a vertical box layout
-func VStack(children ...Widget) *primitives.BoxWidget {
-	return primitives.Box(children...).SetDirection(primitives.DirectionVertical)
+func VStack(children ...Widget) *UIBox {
+	return &UIBox{primitives.Box(children...).SetDirection(primitives.DirectionVertical)}
 }
 
 // HStack creates a horizontal box layout
-func HStack(children ...Widget) *primitives.BoxWidget {
-	return primitives.Box(children...).SetDirection(primitives.DirectionHorizontal)
+func HStack(children ...Widget) *UIBox {
+	return &UIBox{primitives.Box(children...).SetDirection(primitives.DirectionHorizontal)}
 }
 
 // Container creates a flexible box with padding and background
@@ -55,10 +59,38 @@ func Container(children ...Widget) *primitives.BoxWidget {
 	return primitives.Box(children...)
 }
 
-// Spacer creates an empty box that expands
-func Spacer(w, h float32) *primitives.BoxWidget {
-	// Not an exact equivalent to a generic flex spacer yet,
-	// but serves as fixed-size spacing for now.
+// Padding sets uniform padding (helper returning the same widget for chaining)
+func (u *UIBox) Padding(v float32) *UIBox {
+	u.BoxWidget.Padding(v)
+	return u
+}
+
+// PaddingXY sets symmetric padding
+func (u *UIBox) PaddingXY(x, y float32) *UIBox {
+	u.BoxWidget.PaddingXY(x, y)
+	return u
+}
+
+// Middle is currently a no-op placeholder for alignment
+func (u *UIBox) Middle() *UIBox {
+	return u
+}
+
+// Expand wraps the box in an Expanded widget
+func (u *UIBox) Expand() Widget {
+	return primitives.Expanded(u)
+}
+
+// Expanded wraps a widget to fill space
+func Expanded(child Widget) Widget {
+	return primitives.Expanded(child)
+}
+
+// Spacer creates an empty box that can expand if w and h are 0
+func Spacer(w, h float32) Widget {
+	if w == 0 && h == 0 {
+		return primitives.Expanded(primitives.Box())
+	}
 	return primitives.Box().Width(w).Height(h)
 }
 

@@ -1,8 +1,10 @@
-# Gödel: Technical Architecture Deep-Dive
+---
+title:  "Gödel Architecture"
+description: "Technical Architecture Deep-Dive"
+---
 
 *Understanding the rendering engine, GPU pipeline, and performance characteristics.*
-
----
+ 
 
 ## Table of Contents
 1. [GPU Rendering Pipeline](#gpu-rendering-pipeline)
@@ -13,7 +15,7 @@
 6. [Concurrency Guarantees](#concurrency-guarantees)
 7. [Performance Profiling](#performance-profiling)
 
----
+ 
 
 ## GPU Rendering Pipeline
 
@@ -83,13 +85,13 @@ Target: 16.7ms per frame @ 60fps
 ┌────────────────────────────────┐
 │ Frame 60  (16.7ms budget)      │
 ├────────────────────────────────┤
-│ Event polling           <0.5ms │  Non-blocking OS event poll
-│ Event processing        <0.5ms │  Call handlers, queue callbacks
-│ Layout (if dirty)        <2ms  │  Measure + arrange (cached)
-│ Draw call generation     <1ms  │  Traverse tree, batch
-│ GPU submission           <0.5ms│  Record commands, submit
+│ Event polling           &lt;0.5ms │  Non-blocking OS event poll
+│ Event processing        &lt;0.5ms │  Call handlers, queue callbacks
+│ Layout (if dirty)        &lt;2ms  │  Measure + arrange (cached)
+│ Draw call generation     &lt;1ms  │  Traverse tree, batch
+│ GPU submission           &lt;0.5ms│  Record commands, submit
 │ GPU render              ~12ms  │  Actual rasterization (hardware-dependent)
-│ Frame flip/vsync         <0.2ms│  Present to screen
+│ Frame flip/vsync         &lt;0.2ms│  Present to screen
 ├────────────────────────────────┤
 │ Total:                 ~16.7ms │
 └────────────────────────────────┘
@@ -668,7 +670,7 @@ Typical total:                                      ~6.8 MB
 App with ~5000 widgets:
 ├─ Allocation rate:    ~5 MB/s (during UI updates)
 ├─ GC cycle frequency: ~10-20ms @ 60fps (every 0.5-1 frame)
-├─ GC pause:           <0.5ms (if generation0 only)
+├─ GC pause:           &lt;0.5ms (if generation0 only)
 └─ Result:             No visible stuttering
 ```
 
@@ -919,11 +921,11 @@ computed := state.Computed(func() string {
 ```
 Operation               Latency      Notes
 ────────────────────────────────────────────────────────
-Button click            <1ms         Direct function call
-Text input (keystroke)  <2ms         Character insertion + redraw
-List scroll (1000 items) <16ms        GPU-accelerated, virtual list
-Modal dialog open       <50ms        First-time render
-App startup            <300ms        Binary load + initialization
+Button click            &lt;1ms         Direct function call
+Text input (keystroke)  &lt;2ms         Character insertion + redraw
+List scroll (1000 items) &lt;16ms        GPU-accelerated, virtual list
+Modal dialog open       &lt;50ms        First-time render
+App startup            &lt;300ms        Binary load + initialization
 
 Memory
 ────────────────────────────────────────────────────────
@@ -937,8 +939,8 @@ With custom assets     +asset size
 ```
 Framework    Latency    Memory    Binary    Consistency
 ─────────────────────────────────────────────────────────
-Gödel        <1-2ms     Low       5-20MB    Excellent
-Flutter      <1ms       Medium    40-80MB   Excellent
+Gödel        &lt;1-2ms     Low       5-20MB    Excellent
+Flutter      &lt;1ms       Medium    40-80MB   Excellent
 Tauri        10-40ms    Medium    10-15MB   Fair
 Wails        10-50ms    Medium    20-40MB   Poor (WebView)
 Electron     5-20ms     High      150+MB    Fair

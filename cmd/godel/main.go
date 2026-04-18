@@ -74,13 +74,22 @@ var devCmd = &cobra.Command{
 
 // --- Run Command ---
 
+var debugFlag bool
+
 var runCmd = &cobra.Command{
 	Use:   "run [file.go]",
 	Short: "Run a Gödel application (automatically handles CGO_ENABLED=0)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		if debugFlag {
+			fmt.Println("🚀 Running in DEBUG mode...")
+		}
 		runApp(args...)
 	},
+}
+
+func init() {
+	runCmd.Flags().BoolVarP(&debugFlag, "debug", "d", false, "Enable debug logging and GPU profiling")
 }
 
 func runApp(args ...string) {
@@ -89,7 +98,12 @@ func runApp(args ...string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
-	cmd.Env = append(os.Environ(), "CGO_ENABLED=0")
+	env := os.Environ()
+	env = append(env, "CGO_ENABLED=0")
+	if debugFlag {
+		env = append(env, "GODEL_DEBUG=1")
+	}
+	cmd.Env = env
 	
 	if err := cmd.Run(); err != nil {
 		os.Exit(1)

@@ -15,12 +15,14 @@ import (
 	_ "github.com/gogpu/gg/gpu"
 	"github.com/gogpu/gg/integration/ggcanvas"
 	"github.com/gogpu/gogpu"
+	"github.com/gogpu/gpucontext"
 	uiapp "github.com/gogpu/ui/app"
 	"github.com/gogpu/ui/render"
 	"github.com/gogpu/ui/theme"
 	"github.com/gogpu/ui/widget"
 
 	"github.com/intercode/godel/pkg/config"
+	"runtime"
 )
 
 // App is the top-level Gödel application.
@@ -195,8 +197,10 @@ func (a *App) Run(ctx ...context.Context) error {
 		a.uiApp.SetRoot(a.root)
 	}
 
-	// Internal metrics
+	// Internal debug state
+	var debugLog []string
 	var frameTimes []time.Duration
+	debugEnabled := os.Getenv("GODEL_DEBUG") == "1"
 
 	// Register draw handler
 	a.gogpuApp.OnDraw(func(dc *gogpu.Context) {
@@ -206,7 +210,8 @@ func (a *App) Run(ctx ...context.Context) error {
 
 		if a.canvas == nil {
 			var err error
-			a.canvas, err = ggcanvas.New(a.gogpuApp.GPUContextProvider(), w, h)
+			scale := a.gogpuApp.ScaleFactor()
+			a.canvas, err = ggcanvas.NewWithScale(a.gogpuApp.GPUContextProvider(), w, h, scale)
 			if err != nil {
 				log.Printf("godel: canvas creation failed: %v", err)
 				return
@@ -224,13 +229,18 @@ func (a *App) Run(ctx ...context.Context) error {
 		gg.SetAcceleratorSurfaceTarget(sv, sw, sh)
 
 		a.canvas.Draw(func(cc *gg.Context) {
-			// Clear background
-			cc.SetRGBA(0.94, 0.94, 0.94, 1)
+			// Clear background to WHITE
+			cc.SetRGBA(1, 1, 1, 1)
 			cc.DrawRectangle(0, 0, float64(w), float64(h))
 			cc.Fill()
 
 			// Render UI tree
 			a.uiApp.Window().DrawTo(render.NewCanvas(cc, w, h))
+
+			// Render Debug Console if enabled
+			if debugEnabled {
+				a.drawDebugOverlay(cc, debugLog, w, h)
+			}
 		})
 
 		_ = a.canvas.RenderDirect(sv, sw, sh)
@@ -241,6 +251,49 @@ func (a *App) Run(ctx ...context.Context) error {
 			// Only keep last 100 for windowing or similar
 			if len(frameTimes) > 1000 {
 				frameTimes = frameTimes[1:]
+			}
+		}
+	})
+
+	// Inject Keyboard Guard into Event Source for debugging and ghost-filtering
+	es := a.gogpuApp.EventSource()
+
+	// Intercept KeyPress to filter out ghost characters and handle shortcuts
+	es.OnKeyPress(func(key gpucontext.Key, mods gpucontext.Modifiers) {
+		// 1. Shortcut: Cmd+I (Darwin) or Ctrl+I (Others) toggles Inspector
+		isCmd := (runtime.GOOS == "darwin" && mods.HasSuper()) || 
+		         (runtime.GOOS != "darwin" && mods.HasControl())
+		
+		if isCmd && key == gpucontext.KeyI {
+			debugEnabled = !debugEnabled
+			debugLog = append(debugLog, fmt.Sprintf("INSPECTOR %v", map[bool]string{true: "ON", false: "OFF"}[debugEnabled]))
+			a.gogpuApp.RequestRedraw()
+			return
+		}
+
+		// 2. Ghost Filter: Block KeyPress events for characters that should come via TextInput
+		// Characters A-Z, 0-9, and punctuation often leak as KeyPress with Rune=0.
+		// Navigation keys (Back, Enter, Tab, Arrows) MUST be allowed.
+		if isCharacterKey(key) {
+			if debugEnabled {
+				debugLog = append(debugLog, fmt.Sprintf("BLOCKED GHOST KEY: %v", key))
+			}
+			return // SILENCE THE GHOST
+		}
+
+		if debugEnabled {
+			debugLog = append(debugLog, fmt.Sprintf("KEY: %v (mods: %v)", key, mods))
+			if len(debugLog) > 50 {
+				debugLog = debugLog[1:]
+			}
+		}
+	})
+
+	es.OnTextInput(func(text string) {
+		if debugEnabled {
+			debugLog = append(debugLog, fmt.Sprintf("TEXT: %q", text))
+			if len(debugLog) > 50 {
+				debugLog = debugLog[1:]
 			}
 		}
 	})
@@ -257,6 +310,54 @@ func (a *App) Run(ctx ...context.Context) error {
 
 	// Block on the event loop
 	return a.gogpuApp.Run()
+}
+
+// isCharacterKey returns true if the key is a standard printable character
+// that should be handled by OnTextInput rather than raw KeyPress.
+func isCharacterKey(k gpucontext.Key) bool {
+	// A-Z
+	if k >= gpucontext.KeyA && k <= gpucontext.KeyZ {
+		return true
+	}
+	// 0-9
+	if k >= gpucontext.Key0 && k <= gpucontext.Key9 {
+		return true
+	}
+	// Note: We intentionally DO NOT include KeyTab, KeyEnter, KeyBackspace, KeyEscape
+	// which must be handled by KeyPress for UI navigation.
+	return false
+}
+
+// drawDebugOverlay renders a "super cleaner" console in the bottom corner
+func (a *App) drawDebugOverlay(cc *gg.Context, logs []string, w, h int) {
+	overlayH := 150.0
+	cc.SetRGBA(0, 0, 0, 0.8) // Sleek dark overlay
+	cc.DrawRectangle(0, float64(h)-overlayH, float64(w), overlayH)
+	cc.Fill()
+
+	cc.SetRGBA(0.4, 0.6, 1.0, 1) // Indigo accent top border
+	cc.DrawRectangle(0, float64(h)-overlayH, float64(w), 1)
+	cc.Fill()
+
+	// Title
+	cc.SetRGBA(1, 1, 1, 0.9)
+	cc.DrawString("GÖDEL INSPECTOR (BETA)", 20, float64(h)-overlayH+24)
+
+	// Display last 5 logs
+	startIdx := len(logs) - 5
+	if startIdx < 0 {
+		startIdx = 0
+	}
+	y := float64(h) - overlayH + 50
+	cc.SetRGBA(0.7, 0.7, 0.7, 1)
+	for i := startIdx; i < len(logs); i++ {
+		cc.DrawString(logs[i], 20, y)
+		y += 20
+	}
+
+	// Quick Stats
+	cc.SetRGBA(0.4, 1.0, 0.4, 1)
+	cc.DrawString(fmt.Sprintf("PID: %d | SCALE: %.1f", os.Getpid(), a.gogpuApp.ScaleFactor()), float64(w)-250, float64(h)-overlayH+24)
 }
 
 // drainTaskQueue runs all pending callbacks on the main thread.
