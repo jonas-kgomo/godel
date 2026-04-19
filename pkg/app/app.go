@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 
@@ -22,7 +23,6 @@ import (
 	"github.com/gogpu/ui/widget"
 
 	"github.com/intercode/godel/pkg/config"
-	"runtime"
 )
 
 // App is the top-level Gödel application.

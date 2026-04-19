@@ -56,3 +56,16 @@ For internal engine tests only (requires manual flags):
 CGO_ENABLED=0 go test ./...
 CGO_ENABLED=0 go test -bench=. -benchmem ./...
 ```
+
+
+
+
+How to make 
+
+```bash
+export PATH=$PATH:/Users/jonaskgomo/go/bin
+ 
+
+echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.zshrc
+source ~/.zshrc
+```
