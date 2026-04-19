@@ -70,13 +70,13 @@ func main() {
 						return shell.Notify("Tray Active", "Minimized to system tray (Simulated)")
 					},
 				}),
-				ui.Button(ui.ButtonConfig{
+				ui.WithID("btn-dialog", ui.Button(ui.ButtonConfig{
 					Label: "Show App Dialog",
 					OnClick: func(ctx context.Context) error {
 						ui.ShowMessageDialog(ctx, "Info", "Native dialogs are coming in v0.2!", nil)
 						return nil
 					},
-				}),
+				})),
 			).Gap(10),
 
 			ui.Spacer(0, 30),
@@ -84,6 +84,13 @@ func main() {
 		).Padding(40).Background(ui.RGB(255, 255, 255))
 
 		myApp.SetRoot(content)
+
+		myApp.OnSimulate(func(ctx context.Context) error {
+			myApp.LogSimStep("FEATURES TOUR")
+			myApp.SimulateClickOn("btn-dialog")
+			return nil
+		})
+
 		return nil
 	})
 

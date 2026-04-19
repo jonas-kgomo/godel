@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -45,13 +47,98 @@ var initCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := args[0]
-		fmt.Printf("Initializing Gödel project '%s' using template '%s'...\n", projectName, templateFlag)
-		// Scaffolding logic goes here
+		fmt.Printf("🚀 Initializing Gödel project '%s' using template '%s'...\n", projectName, templateFlag)
+		
 		// 1. mkdir projectName
+		err := os.MkdirAll(projectName, 0755)
+		if err != nil {
+			log.Fatalf("Failed to create project directory: %v", err)
+		}
+
+		absPath, _ := filepath.Abs(projectName)
+
 		// 2. generate go.mod
+		goModCmd := exec.Command("go", "mod", "init", projectName)
+		goModCmd.Dir = absPath
+		if err := goModCmd.Run(); err != nil {
+			log.Fatalf("Failed to initialize go module: %v", err)
+		}
+
 		// 3. generate main.go
+		mainTemplate := `package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/intercode/godel/pkg/app"
+	"github.com/intercode/godel/pkg/ui"
+)
+
+func main() {
+	myApp := app.New(
+		app.WithTitle("` + projectName + `"),
+		app.WithSize(800, 600),
+	)
+
+	myApp.OnReady(func(ctx context.Context) error {
+		root := ui.Container(
+			ui.Label("Welcome to ` + projectName + `").FontSize(32).Bold(),
+			ui.Spacer(0, 20),
+			ui.Label("Edit main.go to start building your application."),
+			ui.Spacer(0, 40),
+			ui.Button(ui.ButtonConfig{
+				Label: "Click Me",
+				OnClick: func(ctx context.Context) error {
+					log.Println("Button clicked!")
+					return nil
+				},
+			}),
+		).Padding(50).Center()
+
+		myApp.SetRoot(root)
+		return nil
+	})
+
+	if err := myApp.Run(); err != nil {
+		log.Fatal(err)
+	}
+}
+`
+		err = ioutil.WriteFile(filepath.Join(absPath, "main.go"), []byte(mainTemplate), 0644)
+		if err != nil {
+			log.Fatalf("Failed to write main.go: %v", err)
+		}
+
 		// 4. generate godel.toml
-		log.Println("Project initialized successfully.")
+		tomlContent := `[project]
+name = "` + projectName + `"
+version = "0.1.0"
+template = "` + templateFlag + `"
+
+[build]
+target = "all"
+`
+		err = ioutil.WriteFile(filepath.Join(absPath, "godel.toml"), []byte(tomlContent), 0644)
+		if err != nil {
+			log.Fatalf("Failed to write godel.toml: %v", err)
+		}
+
+		// 5. Add dependency on godel (pointing to local if applicable)
+		// For now we assume the user might want to run from source if they are in the source tree
+		// But usually we just do go get.
+		// To make it work in this repo environment, let's try to add a replace if we are in the godel_system repo.
+		
+		fmt.Println("📦 Fetching dependencies...")
+		tidyCmd := exec.Command("go", "mod", "tidy")
+		tidyCmd.Dir = absPath
+		// We ignore error for tidy because it might fail if godel isn't published yet
+		_ = tidyCmd.Run()
+
+		fmt.Printf("\n✨ Project '%s' created at %s\n", projectName, absPath)
+		fmt.Println("To run your app:")
+		fmt.Printf("  cd %s\n", projectName)
+		fmt.Println("  godel run main.go")
 	},
 }
 

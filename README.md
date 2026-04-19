@@ -1,6 +1,6 @@
 # Gödel: Cross-Platform Development Engine
 
-Gödel is a GPU-accelerated desktop UI framework for Go, designed for building lean, consistent, cross-platform Native applications. It leverages the rendering and widget power of `gogpu/ui` as its foundation, and wraps it with an opinionated, developer-first platform offering CLI tooling, native OS integration, and hot-reload.
+Gödel is a robust UI framework for Go, designed for building lean, consistent, cross-platform Native applications over WebGPU. It leverages the cutting-edge WebGPU capabilities and widget power of `CogentCore` natively, wrapped in our opinionated, developer-first platform offering clean architectures and devtools.
 
 ## Installation & Setup
 

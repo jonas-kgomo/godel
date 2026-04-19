@@ -18,7 +18,7 @@ Most Go applications that need to talk to the GPU or native OS components use **
 
 ## 🎯 Current Mission: Beyond the Buffer
 
-While `gogpu` provides the raw GPU canvas, Gödel builds the **Engine** layers on top. Here are the "++" features we've implemented that go beyond raw graphics:
+While Cogent Core WebGPU provides the raw GPU canvas, Gödel builds the **Engine** layers on top. Here are the "++" features we've implemented that go beyond raw graphics:
 
 While many frameworks stop at providing a window and a draw loop, we are focused on solving three specific problems:
 
@@ -56,7 +56,7 @@ graph TD
         Layout[Layout Engine]
     end
 
-    subgraph Gogpu_Backend [Gogpu/WGPU - Pure Go]
+    subgraph Cogent_Backend [Cogent Core WebGPU - Pure Go]
         Vulkan[Vulkan / Metal / DX12]
         Shader[Shader Compiler]
     end

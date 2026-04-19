@@ -35,7 +35,7 @@
           {
             "group": "Architecture",
             "pages": [
-              "docs/beyond-gogpu",
+              "docs/beyond-webgpu",
               "docs/typography",
               "docs/rendering",
               "docs/threading",
