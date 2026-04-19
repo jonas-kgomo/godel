@@ -188,7 +188,10 @@ func (d *dynamicWidget) updateChild() {
 			// In a real framework we'd unmount d.last here
 		}
 		if current != nil {
-			current.Mount(d.ctx)
+			// Check if the widget implements Mountable interface
+			if m, ok := any(current).(interface{ Mount(widget.Context) }); ok {
+				m.Mount(d.ctx)
+			}
 		}
 	}
 	d.last = current
