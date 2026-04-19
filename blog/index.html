@@ -26,7 +26,7 @@
             <div class="logo">Gödel<span>.Engine</span></div>
             <div class="nav-links">
                 <a href="#benchmarks">Evaluations</a>
-                <a href="#beyond-gogpu">Architecture</a>
+                <a href="#beyond-webgpu">Architecture</a>
                 <a href="#fonts">Typography</a>
                 <a href="#sdf">Rendering</a>
                 <a href="#concurrency">Threading</a>
@@ -109,14 +109,14 @@
             <p class="caption">Benchmarks based on a standard "Hello World" application with basic interactive elements.</p>
         </section>
 
-        <section id="beyond-gogpu" class="content-section">
+        <section id="beyond-webgpu" class="content-section">
             <div class="section-badge">Architecture</div>
-            <h2>Beyond the GPU Abstraction</h2>
+            <h2>Beyond the WebGPU Abstraction</h2>
             <p>
-                Developers often ask: <em>"If you're using gogpu, what did you actually build?"</em> 
+                Developers often ask: <em>"If you're using Cogent Core, what did you actually build?"</em> 
             </p>
             <p>
-                <code>gogpu</code> provides a low-level bridge to Vulkan and Metal. It's essentially a blank canvas. To make it a professional **engine**, we built several core "++" layers that simply didn't exist before:
+                <code>Cogent Core</code> provides a robust, zero-CGO bridge to WebGPU. It's a powerful canvas. To make it a professional **engine**, we built several core "++" layers that simply didn't exist before:
             </p>
             <ul>
                 <li><strong>The "Zero-Jank" Task Queue:</strong> We built a specialized buffer that allows your background tasks (like downloading a 1GB file) to update the UI without the app "hiccupping." Standard GPU apps usually freeze for a split second; Gödel stays at a smooth 60fps.</li>
@@ -128,17 +128,12 @@
             <div class="code-window">
                 <div class="code-header"><span class="filename">pkg/app/app.go</span></div>
                 <pre><code class="language-go">// This is where the magic happens: bridging raw GPU context to a UI tree.
-a.gogpuApp.OnDraw(func(dc *gogpu.Context) {
-    a.drainTaskQueue() // Sync background work
-    
-    // The UI tree calculates its layout here
-    a.uiApp.Frame() 
-    
-    // Then we paint the results to the pixel buffer
-    a.canvas.Draw(func(cc *gg.Context) {
-        // ... rendering logic
-        a.uiApp.Window().DrawTo(render.NewCanvas(cc, w, h))
-    })
+a.SetRoot(func(body *core.Body) {
+    // Gödel widgets are mounted here
+    ui.VStack(
+        ui.Label("Hello Gödel"),
+        ui.Button(ui.ButtonConfig{Label: "Click Me"}),
+    )(body)
 })</code></pre>
             </div>
         </section>
@@ -250,7 +245,7 @@ go install github.com/intercode/godel/cmd/godel@latest
 godel init my-app
 cd my-app
 
-# On macOS: export CGO_ENABLED=1
+# No CGO needed!
 godel run</code></pre>
             </div>
         </section>

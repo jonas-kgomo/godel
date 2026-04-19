@@ -13,7 +13,7 @@ import (
 func main() {
 	// Use our new framework wrapper
 	myApp := app.New(
-		app.WithTitle("Gödel + gogpu/ui Example"),
+		app.WithTitle("Gödel + WebGPU Core Example"),
 		app.WithSize(600, 600),
 		app.WithContinuousRender(false), // 0% CPU idle!
 	)
@@ -41,7 +41,7 @@ func main() {
 				ui.Button(ui.ButtonConfig{
 					Label: "- Decrement",
 					OnClick: func(ctx context.Context) error {
-						// State updates trigger automatic repaints in gogpu/ui
+						// State updates trigger automatic repaints in Cogent Core via Gödel's binding
 						counter.Set(counter.Get() - 1)
 						lastUpdate.Set(time.Now().Format("15:04:05"))
 						return nil

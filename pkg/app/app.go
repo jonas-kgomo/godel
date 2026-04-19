@@ -123,10 +123,20 @@ func (a *App) OnSimulate(fn func(context.Context) error) {
 	a.onSimulate = append(a.onSimulate, fn)
 }
 
-// SetRoot takes our declarative ui.WidgetBuilder and binds it to the core Body
-func (a *App) SetRoot(builder ui.WidgetBuilder) {
-	if a.body != nil {
-		builder(a.body)
+// SetRoot takes our declarative ui.Widget or ui.WidgetBuilder and binds it to the core Body
+func (a *App) SetRoot(root any) {
+	if a.body == nil {
+		return
+	}
+	switch r := root.(type) {
+	case ui.Widget:
+		r.Build(a.body)
+	case ui.WidgetBuilder:
+		r(a.body)
+	case func(body *core.Body):
+		r(a.body)
+	default:
+		log.Printf("godel: unknown root type: %T", root)
 	}
 }
 
@@ -202,4 +212,5 @@ func (a *App) AutoExplore() {}
 func (a *App) SimulateClickOn(id string) {}
 func (a *App) SetSimStatus(status string) {}
 func (a *App) LogSimStep(msg string) {}
+func (a *App) LogSimWarning(msg string) {}
 func (a *App) SaveReport() error { return nil }

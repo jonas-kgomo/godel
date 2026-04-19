@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -186,7 +187,16 @@ func runApp(args ...string) {
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 	env := os.Environ()
-	env = append(env, "CGO_ENABLED=0")
+	foundCGO := false
+	for _, e := range env {
+		if strings.HasPrefix(e, "CGO_ENABLED=") {
+			foundCGO = true
+			break
+		}
+	}
+	if !foundCGO {
+		env = append(env, "CGO_ENABLED=0")
+	}
 	if debugFlag {
 		env = append(env, "GODEL_DEBUG=1")
 	}
